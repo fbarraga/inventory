@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1><i class="bi bi-people"></i> Gestión de Usuaris</h1>
+    <a href="{% url 'user_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Nou Usuari</a>
+</div>
+<div class="card">
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Usuari</th>
+                    <th>Nom</th>
+                    <th>Correu electrònic</th>
+                    <th>Rol</th>
+                    <th>Estat</th>
+                    <th>Accions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.first_name }} {{ user.last_name }}</td>
+                    <td>{{ user.email }}</td>
+                    <td><span class="badge bg-info">{{ user.get_role_display }}</span></td>
+                    <td>{% if user.is_active %}<span class="badge bg-success">Actiu</span>{% else %}<span class="badge bg-secondary">Inactiu</span>{% endif %}</td>
+                    <td>
+                        <a href="{% url 'user_edit' user.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                        <form method="post" action="{% url 'user_delete' user.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Eliminar este usuario?')"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1><i class="bi bi-qr-code"></i> Generar Etiquetes QR en Lote</h1>
+<div class="row mt-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">Formulari de Generació</div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-printer"></i> Generar i Descarregar PDF
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <h5>Configuració Actual</h5>
+                <p><strong>Nomenclatura:</strong><br>{{ config.nomenclatura_default }}</p>
+                <p><strong>Últim número:</strong><br>{{ config.ultimo_numero }}</p>
+                <p><strong>Proper codi:</strong><br>{{ config.nomenclatura_default }}{{ config.ultimo_numero|add:1|stringformat:"04d" }}</p>
+                <a href="{% url 'configuracion_sistema' %}" class="btn btn-light btn-sm">Canviar Configuració</a>
+            </div>
+        </div>
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle"></i> Informació</h6>
+                <ul class="small">
+                    <li>Les etiquetes es generen amb fitxes buides</li>
+                    <li>Es descarregaran en format PDF (A4)</li>
+                    <li>{{ config.etiquetas_por_fila }} x {{ config.etiquetas_por_columna }} etiquetes per pàgina</li>
+                    <li>Preparades per imprimir i enganxar</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

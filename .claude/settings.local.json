@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python generate_project.py:*)",
+      "Bash(python crear_templates.py:*)",
+      "Bash(python crear_templates_inventario.py:*)",
+      "Bash(copy .env.example .env)",
+      "Bash(python manage.py makemigrations:*)",
+      "Bash(python -m venv:*)",
+      "Bash(venv/Scripts/pip install:*)",
+      "Bash(venv/Scripts/python:*)",
+      "Bash(python traducir_templates.py:*)",
+      "Bash(python traducir_faltantes.py:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

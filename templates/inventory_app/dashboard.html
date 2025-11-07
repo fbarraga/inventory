@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1><i class="bi bi-speedometer2"></i> Tauler</h1>
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card text-white" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+            <div class="card-body">
+                <h5>Total d'Actius</h5>
+                <h2>{{ total_inventarios }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <div class="card-body">
+                <h5>Fitxes Buides</h5>
+                <h2>{{ fichas_vacias }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+            <div class="card-body">
+                <h5>Fitxes Completades</h5>
+                <h2>{{ fichas_completadas }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between">
+                <span><i class="bi bi-clock-history"></i> Últims Inventarios</span>
+                <a href="{% url 'inventario_list' %}" class="btn btn-sm btn-primary">Veure Tots</a>
+            </div>
+            <div class="card-body">
+                {% if ultimos %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Codi</th>
+                            <th>Estat</th>
+                            <th>Descripció</th>
+                            <th>Tipus</th>
+                            <th>Ubicació</th>
+                            <th>Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inv in ultimos %}
+                        <tr>
+                            <td><a href="{% url 'inventario_detail' inv.pk %}">{{ inv.codigo_inventario }}</a></td>
+                            <td>{% if inv.estado_ficha == 'vacia' %}<span class="badge bg-warning">Buida</span>{% else %}<span class="badge bg-success">Completada</span>{% endif %}</td>
+                            <td>{{ inv.descripcion|default:"-"|truncatewords:8 }}</td>
+                            <td>{{ inv.tipo_inventario|default:"-" }}</td>
+                            <td>{{ inv.ubicacion|default:"-" }}</td>
+                            <td>{{ inv.created_at|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p class="text-center text-muted my-4">No hi ha inventaris registrats</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

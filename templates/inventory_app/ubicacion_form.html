@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>{{ action }} Ubicació</h1>
+<div class="card mt-3">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success">Desar</button>
+            <a href="{% url 'ubicacion_list' %}" class="btn btn-secondary">Cancel·lar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center">
+    <h1><i class="bi bi-box-seam"></i> {{ inventario.codigo_inventario }}</h1>
+    <div>
+        {% if user.can_edit %}
+        <a href="{% url 'inventario_edit' inventario.pk %}" class="btn btn-primary"><i class="bi bi-pencil"></i> Editar</a>
+        {% endif %}
+        {% if user.can_admin %}
+        <form method="post" action="{% url 'inventario_delete' inventario.pk %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Eliminar?')"><i class="bi bi-trash"></i> Eliminar</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+<div class="row mt-3">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">Informació del Actiu</div>
+            <div class="card-body">
+                <p><strong>Estat de Ficha:</strong> {% if inventario.estado_ficha == 'vacia' %}<span class="badge bg-warning">Buida</span>{% else %}<span class="badge bg-success">Completada</span>{% endif %}</p>
+                <p><strong>Descripció:</strong> {{ inventario.descripcion|default:"-" }}</p>
+                <p><strong>Tipus:</strong> {{ inventario.tipo_inventario|default:"-" }}</p>
+                <p><strong>Ubicació:</strong> {{ inventario.ubicacion|default:"-" }}</p>
+                <p><strong>Estat:</strong> {{ inventario.get_estado_display|default:"-" }}</p>
+                <p><strong>Data de Compra:</strong> {{ inventario.fecha_compra|date:"d/m/Y"|default:"-" }}</p>
+                <p><strong>Creat per:</strong> {{ inventario.created_by|default:"-" }}</p>
+                <p><strong>Data de creación:</strong> {{ inventario.created_at|date:"d/m/Y H:i" }}</p>
+                {% if inventario.is_completed %}
+                <p><strong>Completat por:</strong> {{ inventario.completed_by|default:"-" }}</p>
+                <p><strong>Data de completado:</strong> {{ inventario.completed_at|date:"d/m/Y H:i"|default:"-" }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% if fotos %}
+        <div class="card mt-3">
+            <div class="card-header">Fotografies</div>
+            <div class="card-body">
+                <div class="row">
+                    {% for foto in fotos %}
+                    <div class="col-md-4 mb-3">
+                        <img src="{{ foto.foto.url }}" class="img-fluid rounded" alt="Foto">
+                        {% if foto.es_principal %}<span class="badge bg-primary">Principal</span>{% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Codi QR</div>
+            <div class="card-body text-center">
+                {% if inventario.qr_code %}
+                <img src="{{ inventario.qr_code.url }}" alt="QR" class="img-fluid" style="max-width:200px;">
+                {% else %}
+                <p class="text-muted">QR no disponible</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

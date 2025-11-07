@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1><i class="bi bi-gear"></i> Configuració del Sistema</h1>
+<div class="card mt-3">
+    <div class="card-header">Nomenclatura de Etiquetes</div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success">Desar Configuració</button>
+        </form>
+        <hr>
+        <div class="alert alert-info">
+            <strong>Exemple:</strong> Si la nomenclatura es "INV-" y los dígitos son 4, se generarán códigos como: INV-0001, INV-0002, INV-0003, etc.
+        </div>
+    </div>
+</div>
+{% endblock %}

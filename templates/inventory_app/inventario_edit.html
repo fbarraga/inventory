@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1><i class="bi bi-pencil"></i> Editar Inventari</h1>
+<h3 class="text-muted">{{ inventario.codigo_inventario }}</h3>
+<div class="card mt-3">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success">Desar Cambios</button>
+            <a href="{% url 'inventario_detail' inventario.pk %}" class="btn btn-secondary">Cancel·lar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

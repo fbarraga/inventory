@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1><i class="bi bi-person-circle"></i> El Meu Perfil</h1>
+<div class="card mt-3">
+    <div class="card-body">
+        <p><strong>Usuari:</strong> {{ user.username }}</p>
+        <p><strong>Nom:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+        <p><strong>Correu electrònic:</strong> {{ user.email }}</p>
+        <p><strong>Rol:</strong> <span class="badge bg-primary">{{ user.get_role_display }}</span></p>
+        <p><strong>Tipus de cuenta:</strong> {% if user.is_google_user %}<span class="badge bg-info">Google</span>{% else %}<span class="badge bg-secondary">Local</span>{% endif %}</p>
+    </div>
+</div>
+{% endblock %}

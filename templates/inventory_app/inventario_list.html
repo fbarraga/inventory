@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1><i class="bi bi-list-ul"></i> Inventari</h1>
+<div class="card mt-3">
+    <div class="card-header">Cerca i Filtres</div>
+    <div class="card-body">
+        <form method="get">
+            <div class="row">
+                <div class="col-md-3">{{ form.q }}</div>
+                <div class="col-md-2">{{ form.tipo_inventario }}</div>
+                <div class="col-md-2">{{ form.ubicacion }}</div>
+                <div class="col-md-2">{{ form.estado_ficha }}</div>
+                <div class="col-md-2">{{ form.estado }}</div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">Cercar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="card mt-3">
+    <div class="card-body">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Codi</th>
+                    <th>Estat Ficha</th>
+                    <th>Descripció</th>
+                    <th>Tipus</th>
+                    <th>Ubicació</th>
+                    <th>Estat</th>
+                    <th>Accions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inv in inventarios %}
+                <tr>
+                    <td><strong>{{ inv.codigo_inventario }}</strong></td>
+                    <td>{% if inv.estado_ficha == 'vacia' %}<span class="badge bg-warning">Buida</span>{% else %}<span class="badge bg-success">Completada</span>{% endif %}</td>
+                    <td>{{ inv.descripcion|default:"-"|truncatewords:10 }}</td>
+                    <td>{{ inv.tipo_inventario|default:"-" }}</td>
+                    <td>{{ inv.ubicacion|default:"-" }}</td>
+                    <td>{{ inv.get_estado_display|default:"-" }}</td>
+                    <td>
+                        <a href="{% url 'inventario_detail' inv.pk %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                        {% if inv.is_empty and user.can_edit %}
+                        <a href="{% url 'completar_ficha' inv.codigo_inventario %}" class="btn btn-sm btn-outline-success"><i class="bi bi-pencil"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted">No se encontraron inventarios</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
