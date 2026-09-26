@@ -45,6 +45,8 @@ jobs:
     name: Desplegar al VPS
     needs: tests
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    # Els secrets VPS_* són a l'entorn "prod" del repo
+    environment: prod
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
