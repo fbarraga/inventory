@@ -128,10 +128,18 @@ Segueix les instruccions per crear el teu usuari administrador.
 ### 7. Iniciar servidor
 
 ```bash
-python manage.py runserver
+DEBUG=True python manage.py runserver
 ```
 
 Obre el teu navegador a: **http://localhost:8000**
+
+Amb Docker: `docker compose -f docker-compose.dev.yml up --build` (http://localhost:7000).
+
+### 8. Tests
+
+```bash
+DEBUG=False SECRET_KEY=prova python manage.py test
+```
 
 ## Guia d'Ús
 
@@ -292,15 +300,34 @@ print("Dades de prova creades")
 
 ## Desplegament en Producció
 
-Abans de desplegar en producció:
+Cada push a `main` executa els tests i, si passen, desplega al VPS
+(`.github/workflows/deploy.yml` → `scripts/deploy.sh`). Secrets necessaris al
+repo: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_PORT`.
 
-1. **Canviar SECRET_KEY** a un valor aleatori segur
-2. **Establir DEBUG=False**
-3. **Configurar ALLOWED_HOSTS** amb el teu domini
-4. **Utilitzar base de dades PostgreSQL/MySQL** (opcional)
-5. **Configurar servidor web** (Nginx + Gunicorn)
-6. **Habilitar HTTPS**
-7. **Configurar còpies de seguretat** de la base de dades
+- **Aplicació**: gunicorn al port 7000, usuari sense privilegis, darrere del
+  proxy nginx extern (xarxa Docker `proxy`), que termina HTTPS.
+- **Configuració**: `.env` al VPS (no es versiona). Si no existeix, el deploy
+  el crea a partir de `.env.example` amb una `SECRET_KEY` nova. Mai `DEBUG=True`.
+- **Dades**: BD SQLite al volum `inventory_data` i fotos/QR al volum
+  `inventory_media`. Les fotos i els QR només se serveixen a usuaris
+  autenticats.
+- **Còpies de seguretat**: el servei `backup` en fa una de diària a
+  `backups/daily/` (retenció `BACKUP_KEEP_DAYS`), i cada deploy en guarda una a
+  `backups/pre-deploy-*.sqlite3`.
+- **Seguretat del login**: bloqueig de 15 min després de 5 intents fallits per
+  IP o 20 per usuari; el proxy limita a més les peticions al formulari.
+- **Admin de Django**: desactivat (`DJANGO_ADMIN_ENABLED=False`). La gestió
+  d'usuaris es fa a *Usuaris* dins de l'aplicació.
+
+### Restaurar una còpia
+
+```bash
+docker compose stop web
+gunzip -c backups/daily/db-AAAA-MM-DD_HHMM.sqlite3.gz > /tmp/db.sqlite3
+docker run --rm -v inventory_data:/data -v /tmp/db.sqlite3:/src:ro alpine:3.20 \
+  sh -c "cp /src /data/db.sqlite3 && chown 1000:1000 /data/db.sqlite3"
+docker compose start web
+```
 
 ## Suport
 

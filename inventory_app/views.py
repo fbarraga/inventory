@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q, Count
 from django.http import HttpResponse
+from django.conf import settings
+from django.views.static import serve
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
 from .models import (
@@ -20,6 +22,16 @@ from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.utils import ImageReader
 from reportlab.lib.units import cm
 import io
+
+
+@login_required
+def protected_media(request, path):
+    """Serveix fotos i codis QR només a usuaris autenticats."""
+    # serve() ja rebutja path traversal (../) i rutes fora de MEDIA_ROOT
+    response = serve(request, path, document_root=settings.MEDIA_ROOT)
+    response['Cache-Control'] = 'private, max-age=3600'
+    response['X-Content-Type-Options'] = 'nosniff'
+    return response
 
 
 @login_required

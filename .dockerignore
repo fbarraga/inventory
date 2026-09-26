@@ -41,3 +41,10 @@ static/
 .gitignore
 README.md
 Dockerfile.app
+.claude/
+.github/
+backups/
+data/
+tests/
+docker-compose*.yml
+*.md

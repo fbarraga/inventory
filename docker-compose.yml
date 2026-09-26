@@ -1,54 +1,61 @@
-services:
-  db:
-    image: postgres:16-alpine
-    container_name: inventory_db
-    environment:
-      POSTGRES_DB: inventory
-      POSTGRES_USER: inventory_user
-      POSTGRES_PASSWORD: inventory_pass_dev
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U inventory_user"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - inventory_network
+# Producció (VPS): el proxy nginx extern (xarxa "proxy") fa de frontal HTTPS.
+# Per a desenvolupament local, vegeu docker-compose.dev.yml.
+#
+# Nom de projecte propi: la instal·lació antiga era el projecte "inventory" i
+# compose recrearia (esborrant-lo) el seu contenidor si compartissin nom.
+name: inventari
 
+services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: inventory_app
-    command: python manage.py runserver 0.0.0.0:8000
-    environment:
-      DEBUG: "True"
-      DB_ENGINE: django.db.backends.postgresql
-      DB_NAME: inventory
-      DB_USER: inventory_user
-      DB_PASSWORD: inventory_pass_dev
-      DB_HOST: db
-      DB_PORT: "5432"
-      ALLOWED_HOSTS: "localhost,127.0.0.1,web"
-      SECRET_KEY: "django-insecure-dev-key-change-in-production"
+    build: .
+    image: inventari-web
+    container_name: inventory
+    hostname: inventory
+    restart: unless-stopped
+    env_file: .env
     volumes:
-      - .:/app
-      - static_volume:/app/static
-      - media_volume:/app/media
-    ports:
-      - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
+      - inventory_data:/app/data
+      - inventory_media:/app/media
     networks:
       - inventory_network
+      - proxy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  # Còpia diària de la BD SQLite i de les fotos/QR (retenció: BACKUP_KEEP_DAYS)
+  backup:
+    image: inventari-web
+    pull_policy: never
+    container_name: inventory-backup
+    restart: unless-stopped
+    # Mateix uid que l'app: la BD és 600 i el servei no té cap capability
+    user: "1000:1000"
+    environment:
+      BACKUP_KEEP_DAYS: ${BACKUP_KEEP_DAYS:-30}
+      TZ: Europe/Madrid
+    volumes:
+      - inventory_data:/data:ro
+      - inventory_media:/media:ro
+      - ./backups/daily:/backups
+    entrypoint: ["python", "/app/scripts/backup.py"]
+    # La imatge porta el healthcheck de gunicorn, que aquí no aplica
+    healthcheck:
+      disable: true
+    network_mode: none
+    cap_drop:
+      - ALL
+    depends_on:
+      - web
 
 volumes:
-  postgres_data:
-  static_volume:
-  media_volume:
+  inventory_data:
+    name: inventory_data
+  inventory_media:
+    name: inventory_media
 
 networks:
   inventory_network:
-    driver: bridge
+  proxy:
+    external: true

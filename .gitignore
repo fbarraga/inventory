@@ -48,3 +48,7 @@ db.sqlite3-journal
 Thumbs.db
 
 .claude/
+
+# Còpies de seguretat i dades locals
+/backups
+/data

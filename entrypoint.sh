@@ -1,45 +1,24 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
-echo "Waiting for database..."
-max_attempts=30
-attempt=0
-
-while [ $attempt -lt $max_attempts ]; do
-  if python -c "
-import os
-import psycopg2
-try:
-    conn = psycopg2.connect(
-        host='$DB_HOST',
-        database='$DB_NAME',
-        user='$DB_USER',
-        password='$DB_PASSWORD',
-        connect_timeout=2
-    )
-    conn.close()
-    exit(0)
-except:
-    exit(1)
-" 2>/dev/null; then
-    echo "Database is ready!"
-    break
-  fi
-  attempt=$((attempt + 1))
-  echo "Database not ready (attempt $attempt/$max_attempts), waiting..."
-  sleep 1
-done
-
-if [ $attempt -ge $max_attempts ]; then
-  echo "Database connection timed out after $max_attempts attempts"
-  exit 1
+# Amb PostgreSQL, esperar que la BD accepti connexions (per defecte s'usa SQLite)
+if [ "$DB_ENGINE" = "django.db.backends.postgresql" ]; then
+  echo "Esperant la base de dades..."
+  i=0
+  until python -c "import os, psycopg2; psycopg2.connect(host=os.environ['DB_HOST'], dbname=os.environ['DB_NAME'], user=os.environ['DB_USER'], password=os.environ['DB_PASSWORD'], port=os.environ.get('DB_PORT', '5432'), connect_timeout=2).close()" 2>/dev/null; do
+    i=$((i + 1))
+    if [ "$i" -ge 30 ]; then
+      echo "La base de dades no respon després de 30 intents"
+      exit 1
+    fi
+    sleep 1
+  done
 fi
 
-echo "Running migrations..."
-python manage.py migrate
+echo "Aplicant migracions..."
+python manage.py migrate --noinput
 
-echo "Collecting static files..."
-python manage.py collectstatic --noinput
+echo "Comprovant la configuració de producció..."
+python manage.py check --deploy --fail-level ERROR
 
-echo "Starting application..."
 exec "$@"

@@ -1,0 +1,80 @@
+name: Tests i desplegament al VPS
+
+# Repo PÚBLIC: el desplegament només s'executa en push a main o manualment
+# (mai en pull_request de forks, que no han de tenir accés als secrets).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-inventory
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instal·lar dependències
+        run: pip install -r requirements.txt
+
+      - name: Tests i comprovacions de seguretat
+        env:
+          SECRET_KEY: ci-only-not-a-real-key-${{ github.run_id }}-xxxxxxxxxxxxxxxxxxxxxxxxxx
+          ALLOWED_HOSTS: inventari.asixsapa.cat
+          DATA_DIR: /tmp
+        run: |
+          python manage.py check --deploy --fail-level ERROR
+          python manage.py makemigrations --check --dry-run
+          python manage.py test
+
+  deploy:
+    name: Desplegar al VPS
+    needs: tests
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          command_timeout: 20m
+          script: |
+            set -e
+            APP_DIR=/app/sapa/inventory
+            REPO=https://github.com/fbarraga/inventory.git
+
+            # Primer desplegament: la instal·lació antiga no és un repo git.
+            # Es mou (no s'esborra) i les seves dades les migra scripts/deploy.sh.
+            if [ -d "$APP_DIR" ] && [ ! -d "$APP_DIR/.git" ]; then
+              LEGACY="$APP_DIR.legacy-$(date +%Y%m%d-%H%M%S)"
+              echo "📁 Movent la instal·lació antiga a $LEGACY"
+              mv "$APP_DIR" "$LEGACY"
+            fi
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone "$REPO" "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+            echo "⬇️  Actualitzant codi..."
+            git fetch origin main
+            git checkout -q main
+            git reset --hard origin/main
+
+            bash scripts/deploy.sh

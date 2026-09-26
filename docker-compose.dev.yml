@@ -1,0 +1,18 @@
+# Desenvolupament local: docker compose -f docker-compose.dev.yml up --build
+# (DEBUG activat, port 7000 publicat només a localhost, sense xarxa del proxy)
+services:
+  web:
+    build: .
+    environment:
+      DEBUG: "True"
+      SECRET_KEY: "django-insecure-dev-only-key"
+      ALLOWED_HOSTS: "localhost,127.0.0.1"
+    volumes:
+      - dev_data:/app/data
+      - dev_media:/app/media
+    ports:
+      - "127.0.0.1:7000:7000"
+
+volumes:
+  dev_data:
+  dev_media:
